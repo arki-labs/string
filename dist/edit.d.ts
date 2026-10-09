@@ -1,5 +1,6 @@
 /**
- * Literal editing, affixes, and grapheme-aware padding. Replacement strings are literal:
+ * Literal editing, affixes, and grapheme-aware padding. Search strings are literal
+ * and only match on grapheme boundaries; replacement strings are literal too, so
  * `$&` stays `$&`.
  */
 export type MaskOptions = Readonly<{
@@ -14,6 +15,8 @@ export type MaskOptions = Readonly<{
 export declare function replaceFirst(text: string, search: string, replacement: string): string;
 /** Replaces the last literal occurrence of `search`. */
 export declare function replaceLast(text: string, search: string, replacement: string): string;
+/** Replaces every literal occurrence of `search`, left to right without overlap. */
+export declare function replaceAll(text: string, search: string, replacement: string): string;
 /** Replaces `search` only when `text` starts with it. */
 export declare function replaceStart(text: string, search: string, replacement: string): string;
 /** Replaces `search` only when `text` ends with it. */
@@ -29,7 +32,10 @@ export declare function deduplicate(text: string, token?: string): string;
 export declare function wrap(text: string, opening: string, closing?: string): string;
 /** Removes one complete `opening`/`closing` pair; returns `text` unchanged when the pair is incomplete. */
 export declare function unwrap(text: string, opening: string, closing?: string): string;
-/** Replaces every grapheme in the `[start, end)` range with `glyph`. Masked length stays visible. */
+/**
+ * Replaces every grapheme in the `[start, end)` range with `glyph`, so the masked length stays
+ * visible. `glyph` may not start with a combining mark (it would attach to the previous grapheme).
+ */
 export declare function mask(text: string, options?: MaskOptions): string;
 /** Pads the start until `text` has `targetLength` graphemes. Never shortens. */
 export declare function padStart(text: string, targetLength: number, fill?: string): string;

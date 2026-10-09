@@ -1,24 +1,12 @@
 /**
  * Vocabulary statistics: how varied and how long the words of a text are. Words are compared
- * lowercased; pass `locale` for locale-sensitive lowercasing.
+ * lowercased; pass `locale` for locale-sensitive lowercasing. Each function analyzes its text once.
  */
+import type { WordFrequency, WordLengthStats } from './internal/vocabulary.js';
+export type { WordFrequency, WordLengthStats } from './internal/vocabulary.js';
 export type VocabularyOptions = Readonly<{
     /** BCP 47 tag for lowercasing. Default: locale-independent. */
     locale?: string;
-}>;
-export type WordFrequency = Readonly<{
-    word: string;
-    count: number;
-    /** Share of all words, 0–100. */
-    percentage: number;
-}>;
-export type WordLengthStats = Readonly<{
-    average: number;
-    median: number;
-    mode: number;
-    shortest: number;
-    longest: number;
-    standardDeviation: number;
 }>;
 /** Distinct words, case-insensitively. */
 export declare function uniqueWordCount(text: string, options?: VocabularyOptions): number;

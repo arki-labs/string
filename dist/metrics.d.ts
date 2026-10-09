@@ -1,7 +1,8 @@
 /**
  * One object with every count, score, and statistic for a text — the "word counter" dashboard.
- * Each field comes from a public function in `./segment`, `./readability`, `./keywords`, or
- * `./vocabulary`; import those directly when you need only a few numbers.
+ * The text is analyzed once (tokenized, lowercased, syllabified, split into sentences) and every
+ * field is derived from that single analysis. Import `./segment`, `./readability`, `./keywords`,
+ * or `./vocabulary` directly when you need only a few numbers.
  */
 import type { Keyword } from './keywords.js';
 import type { ReadabilityScores } from './readability.js';
@@ -9,7 +10,7 @@ import type { VocabularyOptions, WordLengthStats } from './vocabulary.js';
 export type TextMetrics = Readonly<{
     /** Graphemes, line breaks included. */
     characters: number;
-    /** Graphemes excluding whitespace. */
+    /** Graphemes that are not whitespace. */
     charactersWithoutSpaces: number;
     words: number;
     uniqueWords: number;

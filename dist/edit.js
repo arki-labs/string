@@ -1,10 +1,11 @@
 /**
- * Literal editing, affixes, and grapheme-aware padding. Replacement strings are literal:
+ * Literal editing, affixes, and grapheme-aware padding. Search strings are literal
+ * and only match on grapheme boundaries; replacement strings are literal too, so
  * `$&` stays `$&`.
  */
 import { escapeRegExp } from './escape.js';
 import { graphemeBoundaries, segmentGraphemes } from './internal/graphemes.js';
-import { assertNeedle, findLiteral, hasPrefix, hasSuffix } from './internal/search.js';
+import { assertNeedle, boundarySet, findLiteral, hasPrefix, hasSuffix } from './internal/search.js';
 import { length } from './unicode.js';
 /** Replaces the first literal occurrence of `search`. */
 export function replaceFirst(text, search, replacement) {
@@ -15,6 +16,22 @@ export function replaceFirst(text, search, replacement) {
 export function replaceLast(text, search, replacement) {
     const index = findLiteral(text, search, { last: true });
     return index === -1 ? text : text.slice(0, index) + replacement + text.slice(index + search.length);
+}
+/** Replaces every literal occurrence of `search`, left to right without overlap. */
+export function replaceAll(text, search, replacement) {
+    assertNeedle(search, 'search');
+    if (!text.includes(search))
+        return text;
+    const boundaries = boundarySet(text);
+    let output = '';
+    let cursor = 0;
+    let index = findLiteral(text, search, { boundaries });
+    while (index !== -1) {
+        output += text.slice(cursor, index) + replacement;
+        cursor = index + search.length;
+        index = findLiteral(text, search, { from: cursor, boundaries });
+    }
+    return output + text.slice(cursor);
 }
 /** Replaces `search` only when `text` starts with it. */
 export function replaceStart(text, search, replacement) {
@@ -37,7 +54,7 @@ export function swap(text, replacements) {
         assertNeedle(key, 'replacement key');
     if (keys.length === 0)
         return text;
-    const boundaries = new Set(graphemeBoundaries(text));
+    const boundaries = boundarySet(text);
     let output = '';
     let index = 0;
     while (index < text.length) {
@@ -59,7 +76,7 @@ export function swap(text, replacements) {
 export function deduplicate(text, token = ' ') {
     assertNeedle(token, 'token');
     const pattern = new RegExp(`(?:${escapeRegExp(token)}){2,}`, 'gu');
-    return text.replaceAll(pattern, token);
+    return text.replaceAll(pattern, () => token);
 }
 /** Surrounds `text` with `opening` and `closing` (defaults to `opening`). */
 export function wrap(text, opening, closing = opening) {
@@ -78,9 +95,15 @@ function resolveIndex(index, count) {
         return Math.max(count + index, 0);
     return Math.min(index, count);
 }
-/** Replaces every grapheme in the `[start, end)` range with `glyph`. Masked length stays visible. */
+const STARTS_WITH_MARK = /^\p{M}/u;
+/**
+ * Replaces every grapheme in the `[start, end)` range with `glyph`, so the masked length stays
+ * visible. `glyph` may not start with a combining mark (it would attach to the previous grapheme).
+ */
 export function mask(text, options = {}) {
     const glyph = options.glyph ?? '*';
+    if (STARTS_WITH_MARK.test(glyph))
+        throw new RangeError('glyph must not start with a combining mark');
     const boundaries = graphemeBoundaries(text);
     const count = boundaries.length - 1;
     const start = options.start ?? 0;
@@ -93,6 +116,7 @@ export function mask(text, options = {}) {
         return text;
     return text.slice(0, boundaries[from]) + glyph.repeat(to - from) + text.slice(boundaries[to]);
 }
+/** `needed` graphemes cycled from `fill`; rejects fills whose repeats merge (marks, flag halves). */
 function padding(fill, needed) {
     if (fill === '')
         throw new TypeError('fill must not be empty');
@@ -100,6 +124,9 @@ function padding(fill, needed) {
     let output = '';
     for (let index = 0; index < needed; index += 1)
         output += fillGraphemes[index % fillGraphemes.length] ?? '';
+    if (STARTS_WITH_MARK.test(output) || length(output) !== needed) {
+        throw new RangeError(`fill ${JSON.stringify(fill)} does not repeat into separate graphemes`);
+    }
     return output;
 }
 function assertTargetLength(targetLength) {

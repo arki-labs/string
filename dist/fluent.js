@@ -5,9 +5,10 @@
  */
 import { fromBase64, toBase64 } from './base64.js';
 import { camelCase, capitalize, caseWords, constantCase, dotCase, kebabCase, pascalCase, pathCase, sentenceCase, snakeCase, titleCase, uncapitalize, } from './case.js';
-import { deduplicate, ensureEnd, ensureStart, mask, padBoth, padEnd, padStart, replaceEnd, replaceFirst, replaceLast, replaceStart, swap, trimPrefix, trimSuffix, unwrap, wrap, } from './edit.js';
+import { deduplicate, ensureEnd, ensureStart, mask, padBoth, padEnd, padStart, replaceAll, replaceEnd, replaceFirst, replaceLast, replaceStart, swap, trimPrefix, trimSuffix, unwrap, wrap, } from './edit.js';
 import { escapeHtml, escapeRegExp } from './escape.js';
 import { collapseWhitespace, excerpt, initials, squish, truncate, wrapText } from './format.js';
+import { findLiteral, hasPrefix, hasSuffix } from './internal/search.js';
 import { interpolate } from './interpolate.js';
 import { after, before, between, containsAny, indexOf } from './search.js';
 import { lines, paragraphs, sentences, wordCount, words } from './segment.js';
@@ -15,6 +16,7 @@ import { slugify, transliterate } from './slug.js';
 import { at, chunk, graphemes, length, reverse, slice, splice, take } from './unicode.js';
 export class StringValue {
     #value;
+    #length;
     constructor(value) {
         this.#value = value;
     }
@@ -41,7 +43,8 @@ export class StringValue {
     // Unicode positional
     /** Grapheme count. */
     get length() {
-        return length(this.#value);
+        this.#length ??= length(this.#value);
+        return this.#length;
     }
     at(index) {
         return at(this.#value, index);
@@ -61,7 +64,7 @@ export class StringValue {
     chunk(size) {
         return chunk(this.#value, size);
     }
-    // Native, chainable
+    // Native-style, chainable (literal searches are grapheme-aligned)
     trim() {
         return str(this.#value.trim());
     }
@@ -89,20 +92,22 @@ export class StringValue {
     repeat(count) {
         return str(this.#value.repeat(count));
     }
+    /** Literal and grapheme-aligned, unlike the native method; `$&` stays `$&`. */
     replaceAll(search, replacement) {
-        return str(this.#value.replaceAll(search, replacement));
+        return str(replaceAll(this.#value, search, replacement));
     }
     split(separator, limit) {
         return this.#value.split(separator, limit);
     }
+    /** Literal and grapheme-aligned: `str('é').includes('e')` is false in decomposed form. */
     includes(needle) {
-        return this.#value.includes(needle);
+        return needle === '' || findLiteral(this.#value, needle) !== -1;
     }
     startsWith(prefix) {
-        return this.#value.startsWith(prefix);
+        return hasPrefix(this.#value, prefix);
     }
     endsWith(suffix) {
-        return this.#value.endsWith(suffix);
+        return hasSuffix(this.#value, suffix);
     }
     // Predicates and combinators
     isEmpty() {

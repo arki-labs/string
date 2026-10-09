@@ -5,6 +5,9 @@
  * so `'👨‍👩‍👧'.length` is 8 and slicing can split an emoji in half. The
  * functions here count user-perceived characters (grapheme clusters) instead.
  * For UTF-16 units use the native methods; for bytes use `utf8Encode`.
+ *
+ * Non-negative positions are resolved by scanning only as far as needed;
+ * negative positions (counted from the end) need the full boundary list.
  */
 export { graphemeBoundaries } from './internal/graphemes.js';
 /** Iterates the grapheme clusters of `text`. */

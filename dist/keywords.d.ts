@@ -1,6 +1,7 @@
 /**
- * Keyword and key-phrase frequency for SEO-style analysis. Phrases are built from whitespace
- * tokens so they never cross clause punctuation; stop words and short words never take part.
+ * Keyword and key-phrase frequency for SEO-style analysis. Words come from the package's one
+ * word definition (`words()`), phrases never cross clause punctuation, and stop words or short
+ * words never take part.
  */
 export type Keyword = Readonly<{
     /** Lowercased word or phrase. */

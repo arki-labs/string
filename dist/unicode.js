@@ -5,8 +5,11 @@
  * so `'👨‍👩‍👧'.length` is 8 and slicing can split an emoji in half. The
  * functions here count user-perceived characters (grapheme clusters) instead.
  * For UTF-16 units use the native methods; for bytes use `utf8Encode`.
+ *
+ * Non-negative positions are resolved by scanning only as far as needed;
+ * negative positions (counted from the end) need the full boundary list.
  */
-import { graphemeBoundaries, segmentGraphemes } from './internal/graphemes.js';
+import { graphemeBoundaries, graphemeBreaks, graphemeCount, segmentGraphemes } from './internal/graphemes.js';
 export { graphemeBoundaries } from './internal/graphemes.js';
 /** Iterates the grapheme clusters of `text`. */
 export function graphemes(text) {
@@ -14,7 +17,7 @@ export function graphemes(text) {
 }
 /** Number of grapheme clusters in `text`. */
 export function length(text) {
-    return graphemeBoundaries(text).length - 1;
+    return graphemeCount(text);
 }
 function assertInteger(value, name) {
     if (!Number.isInteger(value))
@@ -26,13 +29,40 @@ function resolveIndex(index, count) {
         return Math.max(count + index, 0);
     return Math.min(index, count);
 }
+/**
+ * UTF-16 offsets of boundaries `first` and `second` (grapheme positions, `first <= second`) in one
+ * forward scan. A position past the end resolves to `text.length`.
+ */
+function offsetsAt(text, first, second) {
+    let firstOffset = first === 0 ? 0 : -1;
+    let position = 0;
+    for (const offset of graphemeBreaks(text)) {
+        position += 1;
+        if (position === first)
+            firstOffset = offset;
+        if (position === second)
+            return [firstOffset === -1 ? offset : firstOffset, offset];
+    }
+    return [firstOffset === -1 ? text.length : firstOffset, text.length];
+}
 /** Grapheme at `index` (negative counts from the end), or `undefined` when out of range. */
 export function at(text, index) {
     assertInteger(index, 'index');
+    if (index >= 0) {
+        let start = 0;
+        let position = 0;
+        for (const end of graphemeBreaks(text)) {
+            if (position === index)
+                return text.slice(start, end);
+            start = end;
+            position += 1;
+        }
+        return undefined;
+    }
     const boundaries = graphemeBoundaries(text);
     const count = boundaries.length - 1;
-    const resolved = index < 0 ? count + index : index;
-    if (resolved < 0 || resolved >= count)
+    const resolved = count + index;
+    if (resolved < 0)
         return undefined;
     return text.slice(boundaries[resolved], boundaries[resolved + 1]);
 }
@@ -41,6 +71,12 @@ export function slice(text, start = 0, end) {
     assertInteger(start, 'start');
     if (end !== undefined)
         assertInteger(end, 'end');
+    if (start >= 0 && (end === undefined || end >= 0)) {
+        if (end !== undefined && end <= start)
+            return '';
+        const [from, to] = offsetsAt(text, start, end ?? Number.POSITIVE_INFINITY);
+        return text.slice(from, to);
+    }
     const boundaries = graphemeBoundaries(text);
     const count = boundaries.length - 1;
     const from = resolveIndex(start, count);
@@ -78,13 +114,18 @@ export function chunk(text, size) {
     assertInteger(size, 'size');
     if (size <= 0)
         throw new RangeError(`size must be > 0, got ${String(size)}`);
-    const boundaries = graphemeBoundaries(text);
-    const count = boundaries.length - 1;
     const chunks = [];
-    for (let from = 0; from < count; from += size) {
-        const to = Math.min(from + size, count);
-        chunks.push(text.slice(boundaries[from], boundaries[to]));
+    let start = 0;
+    let position = 0;
+    for (const end of graphemeBreaks(text)) {
+        position += 1;
+        if (position % size === 0) {
+            chunks.push(text.slice(start, end));
+            start = end;
+        }
     }
+    if (start < text.length)
+        chunks.push(text.slice(start));
     return chunks;
 }
 //# sourceMappingURL=unicode.js.map

@@ -39,8 +39,10 @@ export declare class StringValue {
     append(suffix: string): StringValue;
     prepend(prefix: string): StringValue;
     repeat(count: number): StringValue;
+    /** Literal and grapheme-aligned, unlike the native method; `$&` stays `$&`. */
     replaceAll(search: string, replacement: string): StringValue;
     split(separator: string | RegExp, limit?: number): string[];
+    /** Literal and grapheme-aligned: `str('é').includes('e')` is false in decomposed form. */
     includes(needle: string): boolean;
     startsWith(prefix: string): boolean;
     endsWith(suffix: string): boolean;

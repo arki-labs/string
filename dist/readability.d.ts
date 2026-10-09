@@ -1,26 +1,11 @@
 /**
  * How hard and how long a text is to read: an English syllable heuristic, the classic readability
- * formulas, and time estimates. Pure functions over `words()` and `sentences()` from `./segment`.
+ * formulas, and time estimates. Each function analyzes its text once; `readability()` computes
+ * every score from a single analysis.
  */
-export type ReadabilityLevel = 'Very Easy' | 'Easy' | 'Fairly Easy' | 'Standard' | 'Fairly Difficult' | 'Difficult' | 'Very Confusing';
-export type ReadabilityScores = Readonly<{
-    /** 0–100; higher is easier. Clamped. */
-    fleschReadingEase: number;
-    /** US school grade. */
-    fleschKincaidGrade: number;
-    /** Years of formal education. */
-    gunningFog: number;
-    /** Years of education; the formula is specified for 30+ sentences and is approximate below that. */
-    smogIndex: number;
-    /** US school grade, from letters and sentences per 100 words. */
-    colemanLiauIndex: number;
-    /** US school grade, from characters per word and words per sentence. */
-    automatedReadabilityIndex: number;
-    /** Läsbarhetsindex: words per sentence plus the percentage of words over six letters. */
-    lix: number;
-    /** Label for `fleschReadingEase`. */
-    fleschReadingEaseLevel: ReadabilityLevel;
-}>;
+import type { ReadabilityScores } from './internal/readability.js';
+export type { ReadabilityLevel, ReadabilityScores } from './internal/readability.js';
+export { fleschReadingEaseLevel } from './internal/readability.js';
 export type TimeOptions = Readonly<{
     wordsPerMinute?: number;
 }>;
@@ -43,8 +28,7 @@ export declare function smogIndex(text: string): number;
 export declare function colemanLiauIndex(text: string): number;
 export declare function automatedReadabilityIndex(text: string): number;
 export declare function lix(text: string): number;
-export declare function fleschReadingEaseLevel(fleschScore: number): ReadabilityLevel;
-/** Every score from one pass over the text. */
+/** Every score from one analysis of the text. */
 export declare function readability(text: string): ReadabilityScores;
 /** Time to read `text` silently. Default 238 words per minute (adult average, Brysbaert 2019). */
 export declare function readingTime(text: string, options?: TimeOptions): ReadingTime;

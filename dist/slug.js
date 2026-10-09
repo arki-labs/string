@@ -80,6 +80,16 @@ function localeRules(locale) {
     return compiled;
 }
 const localeCache = new Map();
+/** User tables (the opt-in CJK sets have thousands of entries) compile once per array instance. */
+const userCache = new WeakMap();
+function userRules(entries) {
+    let compiled = userCache.get(entries);
+    if (compiled === undefined) {
+        compiled = compile(entries);
+        userCache.set(entries, compiled);
+    }
+    return compiled;
+}
 function normalizeLocale(locale) {
     if (locale === undefined || locale === '')
         return undefined;
@@ -93,7 +103,7 @@ function normalizeLocale(locale) {
 export function transliterate(text, options = {}) {
     let output = text.normalize();
     if (options.replacements !== undefined && options.replacements.length > 0) {
-        output = apply(output, compile(options.replacements));
+        output = apply(output, userRules(options.replacements));
     }
     const locale = localeRules(options.locale);
     if (locale !== undefined)
@@ -131,11 +141,11 @@ export function slugify(text, options = {}) {
     // `Conway's Law` → `conways-law`, not `conway-s-law`.
     output = output.replaceAll(/([a-z\d])['’]([ts])(?![a-z\d])/giu, '$1$2');
     const allowed = `a-z\\d${lowercase ? '' : 'A-Z'}${preserve.map(char => escapeRegExp(char)).join('')}`;
-    output = output.replaceAll(new RegExp(`[^${allowed}]+`, 'gu'), separator).replaceAll('\\', '');
+    output = output.replaceAll(new RegExp(`[^${allowed}]+`, 'gu'), () => separator).replaceAll('\\', '');
     if (separator !== '') {
         const escaped = escapeRegExp(separator);
         output = output
-            .replaceAll(new RegExp(`(?:${escaped}){2,}`, 'gu'), separator)
+            .replaceAll(new RegExp(`(?:${escaped}){2,}`, 'gu'), () => separator)
             .replaceAll(new RegExp(`^(?:${escaped})|(?:${escaped})$`, 'gu'), '');
     }
     return `${leadingUnderscore ? '_' : ''}${output}${trailingDash ? '-' : ''}`;
