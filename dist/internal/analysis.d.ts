@@ -21,5 +21,9 @@ export declare class TextAnalysis {
     get lettersAndDigits(): number;
 }
 export declare function analyze(text: string, locale?: string): TextAnalysis;
+/** A text to analyze, or an analysis already made so several functions share one tokenization. */
+export type TextInput = string | TextAnalysis;
+/** An existing analysis is used as is; its own locale wins over `locale`. */
+export declare function toAnalysis(input: TextInput, locale?: string): TextAnalysis;
 export declare function countItems<T>(items: readonly T[]): Map<T, number>;
 //# sourceMappingURL=analysis.d.ts.map

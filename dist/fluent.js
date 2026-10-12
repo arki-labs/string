@@ -7,13 +7,13 @@ import { fromBase64, toBase64 } from './base64.js';
 import { camelCase, capitalize, caseWords, constantCase, dotCase, kebabCase, pascalCase, pathCase, sentenceCase, snakeCase, titleCase, uncapitalize, } from './case.js';
 import { deduplicate, ensureEnd, ensureStart, mask, padBoth, padEnd, padStart, replaceAll, replaceEnd, replaceFirst, replaceLast, replaceStart, swap, trimPrefix, trimSuffix, unwrap, wrap, } from './edit.js';
 import { escapeHtml, escapeRegExp } from './escape.js';
-import { collapseWhitespace, excerpt, initials, squish, truncate, wrapText } from './format.js';
+import { collapseWhitespace, dedent, excerpt, initials, squish, truncate, wrapText } from './format.js';
 import { findLiteral, hasPrefix, hasSuffix } from './internal/search.js';
 import { interpolate } from './interpolate.js';
 import { after, before, between, containsAny, indexOf } from './search.js';
 import { lines, paragraphs, sentences, wordCount, words } from './segment.js';
 import { slugify, transliterate } from './slug.js';
-import { at, chunk, graphemes, length, reverse, slice, splice, take } from './unicode.js';
+import { at, chunk, fold, graphemes, length, reverse, slice, splice, take } from './unicode.js';
 export class StringValue {
     #value;
     #length;
@@ -60,6 +60,10 @@ export class StringValue {
     }
     splice(start, deleteCount, insert) {
         return str(splice(this.#value, start, deleteCount, insert));
+    }
+    /** Search-key form: lowercased, marks stripped, `ß`/`ø`/`ł`… spelled out. */
+    fold(options) {
+        return str(fold(this.#value, options));
     }
     chunk(size) {
         return chunk(this.#value, size);
@@ -217,6 +221,9 @@ export class StringValue {
     }
     wrapText(width, options) {
         return str(wrapText(this.#value, width, options));
+    }
+    dedent() {
+        return str(dedent(this.#value));
     }
     // Search and affixes
     before(delimiter, occurrence) {

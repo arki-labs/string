@@ -30,14 +30,4 @@ export declare function toBase64(text: string, options?: Base64Options): string;
 export declare function fromBase64(encoded: string, options?: Base64Options): string;
 /** Like `fromBase64`, but returns `null` instead of throwing. */
 export declare function tryFromBase64(encoded: string, options?: Base64Options): string | null;
-/**
- * Object-style API kept for existing consumers. `decode`/`urlDecode` return
- * `null` for malformed input; use `fromBase64` when you want an exception.
- */
-export declare const base64: {
-    readonly encode: (data: string | Uint8Array | ArrayBuffer) => string;
-    readonly urlEncode: (data: string | Uint8Array | ArrayBuffer) => string;
-    readonly decode: (encoded: string) => string | null;
-    readonly urlDecode: (encoded: string) => string | null;
-};
 //# sourceMappingURL=base64.d.ts.map

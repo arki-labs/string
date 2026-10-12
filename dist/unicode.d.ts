@@ -26,4 +26,15 @@ export declare function reverse(text: string): string;
 export declare function splice(text: string, start: number, deleteCount: number, insert?: string): string;
 /** Splits `text` into chunks of `size` graphemes; the last chunk may be shorter. */
 export declare function chunk(text: string, size: number): string[];
+export type FoldOptions = Readonly<{
+    /** BCP 47 tag for lowercasing (`'tr'` keeps dotless i). Default: locale-independent. */
+    locale?: string;
+}>;
+/**
+ * Search-key form of `text`: lowercased, accents and other combining marks removed, and the few
+ * Latin letters without a decomposition (`ß`, `ø`, `ł`, …) spelled out. `fold('Émile Zola')` is
+ * `'emile zola'`. Lighter than `transliterate` (no script conversion) and meant for matching, not
+ * display.
+ */
+export declare function fold(text: string, options?: FoldOptions): string;
 //# sourceMappingURL=unicode.d.ts.map

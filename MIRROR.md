@@ -1,6 +1,6 @@
 # @arki/string
 
-Published version: **0.1.1**
+Published version: **0.2.0**
 
 This repository is a **read-only mirror** of the [@arki/string](https://www.npmjs.com/package/@arki/string) npm package.
 

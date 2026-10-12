@@ -28,4 +28,16 @@ export declare function automatedReadabilityIndexOf(a: TextAnalysis): number;
 export declare function lixOf(a: TextAnalysis): number;
 export declare function fleschReadingEaseLevel(fleschScore: number): ReadabilityLevel;
 export declare function readabilityOf(a: TextAnalysis): ReadabilityScores;
+/** Spanish Flesch adaptation (Fernández Huerta, 1959): 206.84 − 60·syllables/word − 1.02·words/sentence. */
+export declare function fernandezHuertaOf(a: TextAnalysis): number;
+/** Spanish INFLESZ scale (Szigriszt Pazos, 1993): 206.835 − 62.3·syllables/word − words/sentence. */
+export declare function szigrisztPazosOf(a: TextAnalysis): number;
+/** German Flesch adaptation (Amstad, 1978): 180 − words/sentence − 58.5·syllables/word. */
+export declare function fleschAmstadOf(a: TextAnalysis): number;
+/**
+ * First Wiener Sachtextformel (Bamberger & Vanecek, 1984), a German school grade:
+ * 0.1935·MS + 0.1672·SL + 0.1297·IW − 0.0327·ES − 0.875, with MS = % words of 3+ syllables,
+ * SL = words per sentence, IW = % words over six letters, ES = % one-syllable words.
+ */
+export declare function wienerSachtextformelOf(a: TextAnalysis): number;
 //# sourceMappingURL=readability.d.ts.map

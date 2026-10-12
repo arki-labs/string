@@ -58,6 +58,10 @@ export class TextAnalysis {
 export function analyze(text, locale) {
     return new TextAnalysis(text, locale);
 }
+/** An existing analysis is used as is; its own locale wins over `locale`. */
+export function toAnalysis(input, locale) {
+    return typeof input === 'string' ? analyze(input, locale) : input;
+}
 export function countItems(items) {
     const counts = new Map();
     for (const item of items)

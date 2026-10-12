@@ -128,4 +128,34 @@ export function chunk(text, size) {
         chunks.push(text.slice(start));
     return chunks;
 }
+/** Latin letters that have no canonical decomposition, so stripping marks leaves them alone. */
+const UNDECOMPOSABLE = new Map([
+    ['ß', 'ss'],
+    ['æ', 'ae'],
+    ['œ', 'oe'],
+    ['ø', 'o'],
+    ['đ', 'd'],
+    ['ł', 'l'],
+    ['ı', 'i'],
+    ['ħ', 'h'],
+    ['ŧ', 't'],
+    ['ð', 'd'],
+    ['þ', 'th'],
+]);
+const UNDECOMPOSABLE_RE = /[ßæœøđłıħŧðþ]/gu;
+const MARKS = /\p{M}/gu;
+/**
+ * Search-key form of `text`: lowercased, accents and other combining marks removed, and the few
+ * Latin letters without a decomposition (`ß`, `ø`, `ł`, …) spelled out. `fold('Émile Zola')` is
+ * `'emile zola'`. Lighter than `transliterate` (no script conversion) and meant for matching, not
+ * display.
+ */
+export function fold(text, options = {}) {
+    const lowered = options.locale === undefined ? text.toLowerCase() : text.toLocaleLowerCase(options.locale);
+    return lowered
+        .normalize('NFD')
+        .replaceAll(MARKS, '')
+        .normalize('NFC')
+        .replaceAll(UNDECOMPOSABLE_RE, letter => UNDECOMPOSABLE.get(letter) ?? letter);
+}
 //# sourceMappingURL=unicode.js.map

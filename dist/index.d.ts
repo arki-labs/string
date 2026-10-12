@@ -1,5 +1,6 @@
 export * from './base64.js';
 export * from './case.js';
+export * from './distance.js';
 export * from './edit.js';
 export * from './escape.js';
 export * from './fluent.js';
@@ -14,5 +15,4 @@ export * from './segment.js';
 export * from './slug.js';
 export * from './unicode.js';
 export * from './vocabulary.js';
-export { countCharacters } from './count/countCharacters.js';
 //# sourceMappingURL=index.d.ts.map

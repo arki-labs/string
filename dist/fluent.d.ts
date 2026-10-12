@@ -10,6 +10,7 @@ import type { ExcerptOptions, InitialsOptions, TruncateOptions, WrapTextOptions 
 import type { InterpolateOptions, TemplateValues } from './interpolate.js';
 import type { Occurrence } from './search.js';
 import type { SlugifyOptions, TransliterateOptions } from './slug.js';
+import type { FoldOptions } from './unicode.js';
 export type NormalizationForm = 'NFC' | 'NFD' | 'NFKC' | 'NFKD';
 export type Transform = (value: StringValue) => StringValue;
 export declare class StringValue {
@@ -29,6 +30,8 @@ export declare class StringValue {
     take(count: number): StringValue;
     reverse(): StringValue;
     splice(start: number, deleteCount: number, insert?: string): StringValue;
+    /** Search-key form: lowercased, marks stripped, `ß`/`ø`/`ł`… spelled out. */
+    fold(options?: FoldOptions): StringValue;
     chunk(size: number): string[];
     trim(): StringValue;
     trimStart(): StringValue;
@@ -81,6 +84,7 @@ export declare class StringValue {
     truncate(maxLength: number, options?: TruncateOptions): StringValue;
     excerpt(needle: string, options?: ExcerptOptions): string | undefined;
     wrapText(width: number, options?: WrapTextOptions): StringValue;
+    dedent(): StringValue;
     before(delimiter: string, occurrence?: Occurrence): StringValue;
     after(delimiter: string, occurrence?: Occurrence): StringValue;
     between(opening: string, closing: string): StringValue;

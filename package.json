@@ -1,6 +1,6 @@
 {
   "name": "@arki/string",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Zero-dependency string toolkit — grapheme-aware slicing and truncation, case conversion, whitespace and word helpers, literal search and editing, HTML/RegExp escaping, templating, strict universal base64, multi-script slugs, and an immutable fluent wrapper.",
   "license": "MIT",
   "repository": {
@@ -112,6 +112,11 @@
       "import": "./dist/metrics.js",
       "default": "./dist/metrics.js"
     },
+    "./distance": {
+      "types": "./dist/distance.d.ts",
+      "import": "./dist/distance.js",
+      "default": "./dist/distance.js"
+    },
     "./hash": {
       "types": "./dist/hash.d.ts",
       "import": "./dist/hash.js",
@@ -121,11 +126,6 @@
       "types": "./dist/fluent.d.ts",
       "import": "./dist/fluent.js",
       "default": "./dist/fluent.js"
-    },
-    "./count-characters": {
-      "types": "./dist/count/countCharacters.d.ts",
-      "import": "./dist/count/countCharacters.js",
-      "default": "./dist/count/countCharacters.js"
     },
     "./package.json": "./package.json"
   },

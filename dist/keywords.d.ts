@@ -3,6 +3,9 @@
  * word definition (`words()`), phrases never cross clause punctuation, and stop words or short
  * words never take part.
  */
+import type { KeywordLanguage } from './internal/stop-words.js';
+export type { KeywordLanguage } from './internal/stop-words.js';
+export { STOP_WORDS } from './internal/stop-words.js';
 export type Keyword = Readonly<{
     /** Lowercased word or phrase. */
     keyword: string;
@@ -19,13 +22,13 @@ export type KeywordOptions = Readonly<{
     minWordLength?: number;
     /** Phrases seen fewer times than this are dropped. Default `1`. */
     minOccurrences?: number;
-    /** Lowercased words that never form keywords. Default `ENGLISH_STOP_WORDS`; pass `null` to disable. */
+    /** Which built-in stop-word list to use. Default `'en'`. */
+    language?: KeywordLanguage;
+    /** Lowercased words that never form keywords. Default: the `language` list; pass `null` to disable. */
     stopWords?: Iterable<string> | null;
     /** BCP 47 tag for lowercasing. Default: locale-independent. */
     locale?: string;
 }>;
-/** English function words that never form keywords. */
-export declare const ENGLISH_STOP_WORDS: readonly string[];
 /**
  * Most frequent words or phrases (`length` words each), lowercased, most frequent first; ties sort
  * alphabetically. `percentage` is the share among all candidate phrases of that length.
