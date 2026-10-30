@@ -1,0 +1,47 @@
+[
+  {
+    "code": "ARKI_STRING_E001",
+    "package": "@arki/string",
+    "kind": "thrown",
+    "what": "An argument is outside what the function accepts (empty needle, negative length, bad glyph).",
+    "fix": "Check the argument against the range in the function reference: a non-empty needle, a whole number of at least 0 for lengths.",
+    "verify": "bun run test",
+    "source": "src/errors.ts:15"
+  },
+  {
+    "code": "ARKI_STRING_E004",
+    "package": "@arki/string",
+    "kind": "thrown",
+    "what": "An `interpolate` template has a malformed placeholder.",
+    "fix": "Write placeholders as `{{ name }}` with an identifier inside, and close every `{{` with `}}`.",
+    "verify": "bun run test",
+    "source": "src/errors.ts:22"
+  },
+  {
+    "code": "string.invalid_base64",
+    "package": "@arki/string",
+    "kind": "failure",
+    "what": "Noncanonical base64. No submitted input is exposed.",
+    "fix": "Use the selected alphabet, correct padding, and zero unused bits.",
+    "verify": "bun run test",
+    "source": "src/base64.ts:24"
+  },
+  {
+    "code": "string.invalid_utf8",
+    "package": "@arki/string",
+    "kind": "failure",
+    "what": "Invalid UTF-8. No submitted text or bytes are exposed.",
+    "fix": "Pass well-formed text or valid UTF-8 bytes.",
+    "verify": "bun run test",
+    "source": "src/base64.ts:14"
+  },
+  {
+    "code": "string.missing_value",
+    "package": "@arki/string",
+    "kind": "failure",
+    "what": "A template references an absent own key or an undefined value.",
+    "fix": "Provide every referenced value, or explicitly choose missing: keep or empty.",
+    "verify": "bun run test -- src/edit.test.ts src/fluent.test.ts",
+    "source": "src/interpolate.ts:16"
+  }
+]

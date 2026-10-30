@@ -111,9 +111,9 @@ export declare class StringValue {
     escapeHtml(): StringValue;
     escapeRegExp(): StringValue;
     /** Treats the value as a `{{ name }}` template. */
-    interpolate(values: TemplateValues, options?: InterpolateOptions): StringValue;
-    toBase64(options?: Base64Options): StringValue;
-    fromBase64(options?: Base64Options): StringValue;
+    interpolate(values: TemplateValues, options?: InterpolateOptions): import("@arki/failure").Failure<"string.missing_value", undefined> | StringValue;
+    toBase64(options?: Base64Options): import("@arki/failure").Failure<"string.invalid_utf8", undefined> | StringValue;
+    fromBase64(options?: Base64Options): import("@arki/failure").Failure<"string.invalid_base64", undefined> | import("@arki/failure").Failure<"string.invalid_utf8", undefined> | StringValue;
 }
 /** Wraps `text` in an immutable fluent `StringValue`. */
 export declare function str(text: string | StringValue): StringValue;

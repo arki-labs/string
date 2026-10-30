@@ -1,7 +1,7 @@
 {
   "name": "@arki/string",
-  "version": "0.2.0",
-  "description": "Zero-dependency string toolkit — grapheme-aware slicing and truncation, case conversion, whitespace and word helpers, literal search and editing, HTML/RegExp escaping, templating, strict universal base64, multi-script slugs, and an immutable fluent wrapper.",
+  "version": "0.4.1",
+  "description": "String toolkit — grapheme-aware slicing and truncation, case conversion, whitespace and word helpers, literal search and editing, HTML/RegExp escaping, templating, strict universal base64, multi-script slugs, and an immutable fluent wrapper.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -66,6 +66,11 @@
       "types": "./dist/edit.d.ts",
       "import": "./dist/edit.js",
       "default": "./dist/edit.js"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js",
+      "default": "./dist/errors.js"
     },
     "./escape": {
       "types": "./dist/escape.d.ts",
@@ -139,8 +144,14 @@
     "!src/**/__tests__/**",
     "README.md",
     "LICENSE",
+    "llms.txt",
+    "docs/**",
+    "AGENTS.md",
     "package.json"
   ],
+  "dependencies": {
+    "@arki/failure": "0.3.0"
+  },
   "publishConfig": {
     "access": "public"
   }

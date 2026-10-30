@@ -1,9 +1,28 @@
+import { defineFailure, isFailure } from '@arki/failure';
 /**
  * Base64 and UTF-8 without `Buffer`, `atob`, or `btoa`, so the same code runs
  * in Node, Bun, browsers, and Hermes. Text functions are UTF-8; byte functions
- * take and return `Uint8Array`. Decoding is strict: malformed base64 throws
- * `SyntaxError`, invalid UTF-8 throws `TypeError`.
+ * take and return `Uint8Array`. Decoding is strict: malformed base64 returns
+ * `InvalidBase64`, invalid UTF-8 returns `InvalidUtf8`. Successes are unwrapped.
  */
+/** Invalid UTF-8. No submitted text or bytes are exposed.
+ * @fix Pass well-formed text or valid UTF-8 bytes.
+ * @verify bun run test
+ */
+export const InvalidUtf8 = defineFailure('string.invalid_utf8', {
+    status: 400,
+    message: 'Text or bytes are not valid UTF-8.',
+    remediation: 'Pass well-formed text without lone surrogates or valid UTF-8 bytes.',
+});
+/** Noncanonical base64. No submitted input is exposed.
+ * @fix Use the selected alphabet, correct padding, and zero unused bits.
+ * @verify bun run test
+ */
+export const InvalidBase64 = defineFailure('string.invalid_base64', {
+    status: 400,
+    message: 'Input is not strict base64.',
+    remediation: 'Use the selected base64 alphabet, correct padding, and zero unused bits without whitespace.',
+});
 const STANDARD_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const URL_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 function lookupTable(alphabet) {
@@ -19,20 +38,23 @@ function resolve(options) {
     const padded = options.padding === undefined ? !url : options.padding === 'required';
     return { alphabet: url ? URL_ALPHABET : STANDARD_ALPHABET, lookup: url ? URL_LOOKUP : STANDARD_LOOKUP, padded };
 }
-/** UTF-8 byte length of `text`. Throws `TypeError` on an unpaired surrogate. */
+/** UTF-8 byte length of `text`. Returns `InvalidUtf8` on an unpaired surrogate. */
 export function byteLength(text) {
     let total = 0;
     for (const char of text) {
         const cp = char.codePointAt(0) ?? 0;
         if (cp >= 0xd8_00 && cp <= 0xdf_ff)
-            throw new TypeError(`Unpaired surrogate U+${cp.toString(16).toUpperCase()}`);
+            return InvalidUtf8();
         total += cp < 0x80 ? 1 : cp < 0x8_00 ? 2 : cp < 0x1_00_00 ? 3 : 4;
     }
     return total;
 }
-/** Encodes `text` as UTF-8. Throws `TypeError` on an unpaired surrogate. */
+/** Encodes `text` as UTF-8. Returns `InvalidUtf8` on an unpaired surrogate. */
 export function utf8Encode(text) {
-    const bytes = new Uint8Array(byteLength(text));
+    const length = byteLength(text);
+    if (isFailure(length))
+        return length;
+    const bytes = new Uint8Array(length);
     let offset = 0;
     for (const char of text) {
         const cp = char.codePointAt(0) ?? 0;
@@ -60,10 +82,10 @@ export function utf8Encode(text) {
 function continuation(bytes, index) {
     const byte = bytes[index];
     if (byte === undefined || (byte & 0xc0) !== 0x80)
-        throw new TypeError(`Invalid UTF-8 continuation at byte ${String(index)}`);
+        return -1;
     return byte & 0x3f;
 }
-/** Decodes strict UTF-8. Overlong forms, surrogates, and truncated sequences throw `TypeError`. A leading BOM is kept. */
+/** Decodes strict UTF-8. Overlong forms, surrogates, and truncated sequences return `InvalidUtf8`. A leading BOM is kept. */
 export function utf8Decode(bytes) {
     const codePoints = [];
     let output = '';
@@ -74,37 +96,42 @@ export function utf8Decode(bytes) {
     let index = 0;
     while (index < bytes.length) {
         const b0 = bytes[index] ?? 0;
+        const b1 = continuation(bytes, index + 1);
+        const b2 = continuation(bytes, index + 2);
+        const b3 = continuation(bytes, index + 3);
         let cp;
         if (b0 < 0x80) {
             cp = b0;
             index += 1;
         }
         else if ((b0 & 0xe0) === 0xc0) {
-            cp = ((b0 & 0x1f) << 6) | continuation(bytes, index + 1);
+            if (b1 < 0)
+                return InvalidUtf8();
+            cp = ((b0 & 0x1f) << 6) | b1;
             if (cp < 0x80)
-                throw new TypeError(`Overlong UTF-8 sequence at byte ${String(index)}`);
+                return InvalidUtf8();
             index += 2;
         }
         else if ((b0 & 0xf0) === 0xe0) {
-            cp = ((b0 & 0x0f) << 12) | (continuation(bytes, index + 1) << 6) | continuation(bytes, index + 2);
+            if (b1 < 0 || b2 < 0)
+                return InvalidUtf8();
+            cp = ((b0 & 0x0f) << 12) | (b1 << 6) | b2;
             if (cp < 0x8_00)
-                throw new TypeError(`Overlong UTF-8 sequence at byte ${String(index)}`);
+                return InvalidUtf8();
             if (cp >= 0xd8_00 && cp <= 0xdf_ff)
-                throw new TypeError(`UTF-8 encoded surrogate at byte ${String(index)}`);
+                return InvalidUtf8();
             index += 3;
         }
         else if ((b0 & 0xf8) === 0xf0) {
-            cp =
-                ((b0 & 0x07) << 18) |
-                    (continuation(bytes, index + 1) << 12) |
-                    (continuation(bytes, index + 2) << 6) |
-                    continuation(bytes, index + 3);
+            if (b1 < 0 || b2 < 0 || b3 < 0)
+                return InvalidUtf8();
+            cp = ((b0 & 0x07) << 18) | (b1 << 12) | (b2 << 6) | b3;
             if (cp < 0x1_00_00 || cp > 0x10_ff_ff)
-                throw new TypeError(`Invalid UTF-8 sequence at byte ${String(index)}`);
+                return InvalidUtf8();
             index += 4;
         }
         else {
-            throw new TypeError(`Invalid UTF-8 lead byte at byte ${String(index)}`);
+            return InvalidUtf8();
         }
         codePoints.push(cp);
         if (codePoints.length >= 4096)
@@ -144,21 +171,21 @@ export function bytesToBase64(bytes, options = {}) {
 /**
  * Decodes base64 to bytes. Rejects whitespace, characters outside the selected
  * alphabet, misplaced or missing padding, impossible lengths, and nonzero
- * unused bits, throwing `SyntaxError`.
+ * unused bits, returning `InvalidBase64`.
  */
 export function base64ToBytes(encoded, options = {}) {
     const { lookup, padded } = resolve(options);
     let body = encoded;
     if (padded) {
         if (encoded.length % 4 !== 0)
-            throw new SyntaxError('Base64 length must be a multiple of 4');
+            return InvalidBase64();
         const padLength = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
         body = encoded.slice(0, encoded.length - padLength);
         if ((4 - (body.length % 4)) % 4 !== padLength)
-            throw new SyntaxError('Invalid base64 padding');
+            return InvalidBase64();
     }
     else if (body.length % 4 === 1) {
-        throw new SyntaxError('Impossible base64 length');
+        return InvalidBase64();
     }
     const remainder = body.length % 4;
     const bytes = new Uint8Array(Math.floor(body.length / 4) * 3 + (remainder === 0 ? 0 : remainder - 1));
@@ -169,7 +196,7 @@ export function base64ToBytes(encoded, options = {}) {
         const code = body.codePointAt(index) ?? 128;
         const value = code < 128 ? (lookup[code] ?? -1) : -1;
         if (value < 0)
-            throw new SyntaxError(`Invalid base64 character at index ${String(index)}`);
+            return InvalidBase64();
         buffer = (buffer << 6) | value;
         bits += 6;
         if (bits >= 8) {
@@ -178,26 +205,17 @@ export function base64ToBytes(encoded, options = {}) {
         }
     }
     if (bits > 0 && (buffer & ((1 << bits) - 1)) !== 0)
-        throw new SyntaxError('Nonzero unused bits in base64 input');
+        return InvalidBase64();
     return bytes;
 }
 /** Encodes `text` (UTF-8) as base64. */
 export function toBase64(text, options = {}) {
-    return bytesToBase64(utf8Encode(text), options);
+    const bytes = utf8Encode(text);
+    return isFailure(bytes) ? bytes : bytesToBase64(bytes, options);
 }
-/** Decodes base64 to text. Throws `SyntaxError` for malformed base64 and `TypeError` for invalid UTF-8. */
+/** Decodes base64 to text. Returns `InvalidBase64` for malformed base64 and `InvalidUtf8` for invalid UTF-8. */
 export function fromBase64(encoded, options = {}) {
-    return utf8Decode(base64ToBytes(encoded, options));
-}
-/** Like `fromBase64`, but returns `null` instead of throwing. */
-export function tryFromBase64(encoded, options = {}) {
-    try {
-        return fromBase64(encoded, options);
-    }
-    catch (error) {
-        if (error instanceof SyntaxError || error instanceof TypeError)
-            return null;
-        throw error;
-    }
+    const bytes = base64ToBytes(encoded, options);
+    return isFailure(bytes) ? bytes : utf8Decode(bytes);
 }
 //# sourceMappingURL=base64.js.map

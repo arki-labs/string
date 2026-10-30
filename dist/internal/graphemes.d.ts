@@ -22,6 +22,11 @@ export declare function fallbackBoundaries(text: string): number[];
 export declare function graphemeBreaks(text: string): Generator<number, void, undefined>;
 /** Every boundary offset of `text`, always starting with `0` and ending with `text.length`. */
 export declare function graphemeBoundaries(text: string): number[];
+/**
+ * Offset of boundary number `position` when `text` has more than `limit` graphemes, else
+ * `undefined` (`position <= limit`). One pass that stops after `limit + 1` graphemes.
+ */
+export declare function boundaryIfLonger(text: string, position: number, limit: number): number | undefined;
 /** Number of grapheme clusters, without materializing offsets. */
 export declare function graphemeCount(text: string): number;
 /**

@@ -1,8 +1,4 @@
-/**
- * Immutable fluent wrapper. Every string-producing function in this package is
- * available as a method; queries return plain values. `str('x')` never mutates.
- * Note: `Boolean(str(''))` is `true` like any object — use `isEmpty()`.
- */
+import { isFailure } from '@arki/failure';
 import { fromBase64, toBase64 } from './base64.js';
 import { camelCase, capitalize, caseWords, constantCase, dotCase, kebabCase, pascalCase, pathCase, sentenceCase, snakeCase, titleCase, uncapitalize, } from './case.js';
 import { deduplicate, ensureEnd, ensureStart, mask, padBoth, padEnd, padStart, replaceAll, replaceEnd, replaceFirst, replaceLast, replaceStart, swap, trimPrefix, trimSuffix, unwrap, wrap, } from './edit.js';
@@ -306,13 +302,16 @@ export class StringValue {
     }
     /** Treats the value as a `{{ name }}` template. */
     interpolate(values, options) {
-        return str(interpolate(this.#value, values, options));
+        const result = interpolate(this.#value, values, options);
+        return isFailure(result) ? result : str(result);
     }
     toBase64(options) {
-        return str(toBase64(this.#value, options));
+        const result = toBase64(this.#value, options);
+        return isFailure(result) ? result : str(result);
     }
     fromBase64(options) {
-        return str(fromBase64(this.#value, options));
+        const result = fromBase64(this.#value, options);
+        return isFailure(result) ? result : str(result);
     }
 }
 /** Wraps `text` in an immutable fluent `StringValue`. */

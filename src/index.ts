@@ -1,7 +1,9 @@
+/** Every function of `@arki/string` in one entry: case, format, search, edit, escape, slugs, base64, readability, distance and the fluent `str` wrapper. */
 export * from './base64.js';
 export * from './case.js';
 export * from './distance.js';
 export * from './edit.js';
+export * from './errors.js';
 export * from './escape.js';
 export * from './fluent.js';
 export * from './format.js';

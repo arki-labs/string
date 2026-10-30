@@ -1,3 +1,5 @@
+import { isFailure } from '@arki/failure';
+
 /**
  * Immutable fluent wrapper. Every string-producing function in this package is
  * available as a method; queries return plain values. `str('x')` never mutates.
@@ -369,14 +371,17 @@ export class StringValue {
     return str(escapeRegExp(this.#value));
   }
   /** Treats the value as a `{{ name }}` template. */
-  interpolate(values: TemplateValues, options?: InterpolateOptions): StringValue {
-    return str(interpolate(this.#value, values, options));
+  interpolate(values: TemplateValues, options?: InterpolateOptions) {
+    const result = interpolate(this.#value, values, options);
+    return isFailure(result) ? result : str(result);
   }
-  toBase64(options?: Base64Options): StringValue {
-    return str(toBase64(this.#value, options));
+  toBase64(options?: Base64Options) {
+    const result = toBase64(this.#value, options);
+    return isFailure(result) ? result : str(result);
   }
-  fromBase64(options?: Base64Options): StringValue {
-    return str(fromBase64(this.#value, options));
+  fromBase64(options?: Base64Options) {
+    const result = fromBase64(this.#value, options);
+    return isFailure(result) ? result : str(result);
   }
 }
 

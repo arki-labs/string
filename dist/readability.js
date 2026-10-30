@@ -6,6 +6,7 @@
  * English by default, Spanish (`fernandezHuerta`, `szigrisztPazos`) or German (`fleschAmstad`,
  * `wienerSachtextformel`) with `{ language }`.
  */
+import { STRING_ERROR_CODES, StringError } from './errors.js';
 import { toAnalysis } from './internal/analysis.js';
 import { sum } from './internal/math.js';
 import { automatedReadabilityIndexOf, colemanLiauIndexOf, fernandezHuertaOf, fleschAmstadOf, fleschKincaidGradeOf, fleschReadingEaseOf, gunningFogOf, lixOf, readabilityOf, smogIndexOf, szigrisztPazosOf, wienerSachtextformelOf, } from './internal/readability.js';
@@ -86,7 +87,7 @@ export function speakingTime(text, options = {}) {
 }
 function estimate(wordCount, wordsPerMinute) {
     if (!Number.isFinite(wordsPerMinute) || wordsPerMinute <= 0) {
-        throw new RangeError(`wordsPerMinute must be a positive finite number, got ${String(wordsPerMinute)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `wordsPerMinute must be a positive finite number, got ${String(wordsPerMinute)}`);
     }
     const minutes = wordCount / wordsPerMinute;
     return { words: wordCount, seconds: minutes * 60, minutes };

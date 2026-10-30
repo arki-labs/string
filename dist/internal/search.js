@@ -4,10 +4,11 @@
  * before any segmentation; callers that search repeatedly pass a shared
  * boundary set.
  */
+import { STRING_ERROR_CODES, StringError } from '../errors.js';
 import { graphemeBoundaries, isGraphemeBoundary } from './graphemes.js';
 export function assertNeedle(needle, name = 'needle') {
     if (needle === '')
-        throw new TypeError(`${name} must not be empty`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `${name} must not be empty`);
 }
 export function boundarySet(text) {
     return new Set(graphemeBoundaries(text));

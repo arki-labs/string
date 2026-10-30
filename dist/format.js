@@ -1,7 +1,8 @@
 /**
  * Whitespace cleanup and display formatting: initials, truncation, excerpts, wrapping.
  */
-import { graphemeBoundaries } from './internal/graphemes.js';
+import { STRING_ERROR_CODES, StringError } from './errors.js';
+import { boundaryIfLonger, graphemeBoundaries } from './internal/graphemes.js';
 import { assertNeedle, findLiteral } from './internal/search.js';
 import { sentenceEnds } from './internal/sentences.js';
 import { wordSpans } from './internal/words.js';
@@ -20,7 +21,7 @@ export function squish(text) {
 export function initials(text, options = {}) {
     const max = options.max ?? 2;
     if (!Number.isInteger(max) || max < 1)
-        throw new RangeError(`max must be a positive integer, got ${String(max)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `max must be a positive integer, got ${String(max)}`);
     const components = squish(text)
         .split(' ')
         .filter(component => component !== '');
@@ -28,7 +29,7 @@ export function initials(text, options = {}) {
         return '';
     const singleWord = options.singleWord ?? 1;
     if (!Number.isInteger(singleWord) || singleWord < 1) {
-        throw new RangeError(`singleWord must be a positive integer, got ${String(singleWord)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `singleWord must be a positive integer, got ${String(singleWord)}`);
     }
     if (components.length === 1 && singleWord > 1) {
         const leading = take(components[0] ?? '', singleWord);
@@ -48,20 +49,22 @@ export function initials(text, options = {}) {
  */
 export function truncate(text, maxLength, options = {}) {
     if (!Number.isInteger(maxLength) || maxLength < 0) {
-        throw new RangeError(`maxLength must be a non-negative integer, got ${String(maxLength)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `maxLength must be a non-negative integer, got ${String(maxLength)}`);
     }
     if (maxLength === 0)
         return '';
-    const boundaries = graphemeBoundaries(text);
-    const total = boundaries.length - 1;
-    if (total <= maxLength)
+    // Every grapheme is at least one code unit.
+    if (text.length <= maxLength)
         return text;
     const ellipsis = options.ellipsis ?? '…';
     const ellipsisLength = length(ellipsis);
+    const budget = Math.max(maxLength - ellipsisLength, 0);
+    // Reads only the first `maxLength + 1` graphemes, not the whole text.
+    const cutOffset = boundaryIfLonger(text, budget, maxLength);
+    if (cutOffset === undefined)
+        return text;
     if (ellipsisLength >= maxLength)
         return take(ellipsis, maxLength);
-    const budget = maxLength - ellipsisLength;
-    const cutOffset = boundaries[budget] ?? text.length;
     let cut = text.slice(0, cutOffset);
     if (options.boundary === 'sentence') {
         let lastEnd = 0;
@@ -88,7 +91,7 @@ function backUpToWord(text, cut, cutOffset) {
 export function excerpt(text, needle, options = {}) {
     const radius = options.radius ?? 40;
     if (!Number.isInteger(radius) || radius < 0) {
-        throw new RangeError(`radius must be a non-negative integer, got ${String(radius)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `radius must be a non-negative integer, got ${String(radius)}`);
     }
     assertNeedle(needle);
     if (!text.includes(needle))
@@ -162,7 +165,7 @@ function wrapLine(line, width, breakWords) {
 /** Greedy word wrap measured in graphemes. Existing line breaks are preserved. */
 export function wrapText(text, width, options = {}) {
     if (!Number.isInteger(width) || width < 1)
-        throw new RangeError(`width must be a positive integer, got ${String(width)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `width must be a positive integer, got ${String(width)}`);
     return lines(text)
         .flatMap(line => wrapLine(line, width, options.breakWords === true))
         .join(options.newline ?? '\n');

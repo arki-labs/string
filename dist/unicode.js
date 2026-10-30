@@ -9,6 +9,7 @@
  * Non-negative positions are resolved by scanning only as far as needed;
  * negative positions (counted from the end) need the full boundary list.
  */
+import { STRING_ERROR_CODES, StringError } from './errors.js';
 import { graphemeBoundaries, graphemeBreaks, graphemeCount, segmentGraphemes } from './internal/graphemes.js';
 export { graphemeBoundaries } from './internal/graphemes.js';
 /** Iterates the grapheme clusters of `text`. */
@@ -21,7 +22,7 @@ export function length(text) {
 }
 function assertInteger(value, name) {
     if (!Number.isInteger(value))
-        throw new RangeError(`${name} must be an integer, got ${String(value)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `${name} must be an integer, got ${String(value)}`);
 }
 /** Normalizes a slice-style index (negative counts from the end, clamped to [0, count]). */
 function resolveIndex(index, count) {
@@ -94,7 +95,6 @@ export function take(text, count) {
 }
 /** Reverses the grapheme sequence, keeping each grapheme intact. */
 export function reverse(text) {
-    // eslint-disable-next-line unicorn/no-array-reverse -- fresh copy; ES2023 toReversed is missing on older engines
     return [...graphemes(text)].reverse().join('');
 }
 /** Immutable grapheme-indexed splice: removes `deleteCount` graphemes at `start` and inserts `insert`. */
@@ -102,7 +102,7 @@ export function splice(text, start, deleteCount, insert = '') {
     assertInteger(start, 'start');
     assertInteger(deleteCount, 'deleteCount');
     if (deleteCount < 0)
-        throw new RangeError(`deleteCount must be >= 0, got ${String(deleteCount)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `deleteCount must be >= 0, got ${String(deleteCount)}`);
     const boundaries = graphemeBoundaries(text);
     const count = boundaries.length - 1;
     const from = resolveIndex(start, count);
@@ -113,7 +113,7 @@ export function splice(text, start, deleteCount, insert = '') {
 export function chunk(text, size) {
     assertInteger(size, 'size');
     if (size <= 0)
-        throw new RangeError(`size must be > 0, got ${String(size)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `size must be > 0, got ${String(size)}`);
     const chunks = [];
     let start = 0;
     let position = 0;

@@ -9,7 +9,6 @@ export function wordFrequenciesOf(a) {
     const total = a.lowerWords.length;
     return ([...a.frequencies]
         .map(([word, count]) => ({ word, count, percentage: (count / total) * 100 }))
-        // eslint-disable-next-line unicorn/no-array-sort -- the array is freshly built; no ES2023 toSorted for older engines
         .sort((x, y) => y.count - x.count || (x.word < y.word ? -1 : 1)));
 }
 export function lexicalDiversityOf(a) {

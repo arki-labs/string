@@ -3,6 +3,7 @@
  * are encoded. Compare case-insensitively or accent-insensitively by folding both inputs first
  * (`fold` in `./unicode`). All three are O(n·m) in the grapheme counts.
  */
+import { STRING_ERROR_CODES, StringError } from './errors.js';
 import { graphemes } from './unicode.js';
 /** Minimum number of grapheme insertions, deletions, and substitutions turning `a` into `b`. */
 export function levenshtein(a, b) {
@@ -64,7 +65,7 @@ function bigrams(text) {
 export function jaroWinkler(a, b, options = {}) {
     const scale = options.prefixScale ?? 0.1;
     if (!(scale >= 0 && scale <= 0.25)) {
-        throw new RangeError(`prefixScale must be between 0 and 0.25, got ${String(options.prefixScale)}`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `prefixScale must be between 0 and 0.25, got ${String(options.prefixScale)}`);
     }
     if (a === b)
         return 1;

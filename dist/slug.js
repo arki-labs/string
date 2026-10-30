@@ -6,6 +6,7 @@
  * strips remaining diacritics. `slugify` builds on it with decamelizing,
  * lowercasing, separator handling, and apostrophe contractions.
  */
+import { STRING_ERROR_CODES, StringError } from './errors.js';
 import { escapeRegExp } from './escape.js';
 import { rulesets } from './slug/rules.js';
 import { builtinReplacements, localeReplacements } from './slug/transliterations.js';
@@ -48,7 +49,6 @@ function compile(entries) {
     for (const [from, to] of entries)
         if (from !== '')
             map.set(from, to);
-    // eslint-disable-next-line unicorn/no-array-sort -- fresh copy; ES2023 toSorted is missing on older engines
     const keys = [...map.keys()].sort((a, b) => b.length - a.length);
     const pattern = new RegExp(keys.map(key => escapeRegExp(key)).join('|'), 'gu');
     return { map, pattern };
@@ -128,7 +128,7 @@ export function slugify(text, options = {}) {
     const lowercase = options.lowercase ?? true;
     const preserve = options.preserveCharacters ?? [];
     if (preserve.includes(separator)) {
-        throw new TypeError(`The separator ${JSON.stringify(separator)} cannot also be a preserved character`);
+        throw new StringError(STRING_ERROR_CODES.invalidArgument, `The separator ${JSON.stringify(separator)} cannot also be a preserved character`);
     }
     const leadingUnderscore = options.preserveLeadingUnderscore === true && text.startsWith('_');
     const trailingDash = options.preserveTrailingDash === true && text.endsWith('-');

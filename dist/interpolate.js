@@ -1,15 +1,25 @@
-/**
- * Minimal `{{ name }}` templating for flat values. No expressions, no dotted
- * paths, no recursion. Output is plain text; escape separately when needed.
+import { defineFailure, invariant } from '@arki/failure';
+import { STRING_ERROR_CODES, StringError } from './errors.js';
+/** A template references an absent own key or an undefined value.
+ * @fix Provide every referenced value, or explicitly choose missing: keep or empty.
+ * @verify bun run test -- src/edit.test.ts src/fluent.test.ts
  */
+export const MissingValue = defineFailure('string.missing_value', {
+    status: 400,
+    message: 'A template value is missing.',
+    remediation: 'Provide every referenced value, or explicitly choose missing: keep or empty.',
+});
+const MISSING_POLICIES = ['fail', 'keep', 'empty'];
 const IDENTIFIER = /^[\p{L}_$][\p{L}\p{N}_$]*$/u;
 /**
  * Replaces `{{ name }}` placeholders with `values[name]`. `null` renders as
  * `''`; `undefined` counts as missing. `\{{` emits a literal `{{` and `\\`
- * a literal backslash. Malformed placeholders throw `SyntaxError`.
+ * a literal backslash. Missing values return `MissingValue`; malformed
+ * placeholders throw `StringError` (`ARKI_STRING_E004`).
  */
 export function interpolate(template, values, options = {}) {
-    const missing = options.missing ?? 'throw';
+    const missing = options.missing ?? 'fail';
+    invariant(MISSING_POLICIES.includes(missing), 'Interpolation missing policy must be fail, keep or empty.');
     let output = '';
     let index = 0;
     while (index < template.length) {
@@ -30,15 +40,15 @@ export function interpolate(template, values, options = {}) {
         }
         const close = template.indexOf('}}', index + 2);
         if (close === -1)
-            throw new SyntaxError(`Unterminated placeholder at index ${String(index)}`);
+            throw new StringError(STRING_ERROR_CODES.invalidTemplate, `Unterminated placeholder at index ${String(index)}`);
         const raw = template.slice(index, close + 2);
         const key = template.slice(index + 2, close).trim();
         if (!IDENTIFIER.test(key))
-            throw new SyntaxError(`Invalid placeholder ${raw}`);
+            throw new StringError(STRING_ERROR_CODES.invalidTemplate, `Invalid placeholder ${raw}`);
         const value = Object.hasOwn(values, key) ? values[key] : undefined;
         if (value === undefined) {
-            if (missing === 'throw')
-                throw new ReferenceError(`Missing value for placeholder ${raw}`);
+            if (missing === 'fail')
+                return MissingValue();
             if (missing === 'keep')
                 output += raw;
         }
