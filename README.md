@@ -1,4 +1,4 @@
-Read-only mirror of `@arki/string` v0.4.1. Source and issues: arki-labs/arki. Docs: https://arki.dev/packages/string. Published 2026-10-30 with provenance https://www.npmjs.com/package/@arki/string/v/0.4.1#provenance.
+Read-only mirror of `@arki/string` v0.5.0. Source and issues: arki-labs/arki. Docs: https://arki.dev/packages/string. Published 2026-10-30 with provenance https://www.npmjs.com/package/@arki/string/v/0.5.0#provenance.
 
 # @arki/string
 
@@ -226,7 +226,9 @@ lowercase letter follows.
 | `don't-stop`     | `dont`, `stop`           | `dont_stop`        |
 
 Casing is locale-independent unless you pass `{ locale: 'tr' }`; the machine
-locale is never used. `titleCase` and `sentenceCase` build labels from tokens
+locale is never used. A malformed locale tag, such as a raw `Accept-Language`
+header or cookie value, does not throw: the function falls back to
+locale-independent casing and logs the swap at DEBUG (`arki:string:locale`). `titleCase` and `sentenceCase` build labels from tokens
 and discard punctuation; `capitalize` only touches the first grapheme.
 
 ### Format

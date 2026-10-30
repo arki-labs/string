@@ -4,6 +4,7 @@ import { camelCase, capitalize, caseWords, constantCase, dotCase, kebabCase, pas
 import { deduplicate, ensureEnd, ensureStart, mask, padBoth, padEnd, padStart, replaceAll, replaceEnd, replaceFirst, replaceLast, replaceStart, swap, trimPrefix, trimSuffix, unwrap, wrap, } from './edit.js';
 import { escapeHtml, escapeRegExp } from './escape.js';
 import { collapseWhitespace, dedent, excerpt, initials, squish, truncate, wrapText } from './format.js';
+import { lower, upper } from './internal/locale.js';
 import { findLiteral, hasPrefix, hasSuffix } from './internal/search.js';
 import { interpolate } from './interpolate.js';
 import { after, before, between, containsAny, indexOf } from './search.js';
@@ -75,10 +76,10 @@ export class StringValue {
         return str(this.#value.trimEnd());
     }
     upper(locale) {
-        return str(locale === undefined ? this.#value.toUpperCase() : this.#value.toLocaleUpperCase(locale));
+        return str(upper(this.#value, locale));
     }
     lower(locale) {
-        return str(locale === undefined ? this.#value.toLowerCase() : this.#value.toLocaleLowerCase(locale));
+        return str(lower(this.#value, locale));
     }
     normalize(form = 'NFC') {
         return str(this.#value.normalize(form));

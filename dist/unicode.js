@@ -11,6 +11,7 @@
  */
 import { STRING_ERROR_CODES, StringError } from './errors.js';
 import { graphemeBoundaries, graphemeBreaks, graphemeCount, segmentGraphemes } from './internal/graphemes.js';
+import { lower } from './internal/locale.js';
 export { graphemeBoundaries } from './internal/graphemes.js';
 /** Iterates the grapheme clusters of `text`. */
 export function graphemes(text) {
@@ -151,7 +152,7 @@ const MARKS = /\p{M}/gu;
  * display.
  */
 export function fold(text, options = {}) {
-    const lowered = options.locale === undefined ? text.toLowerCase() : text.toLocaleLowerCase(options.locale);
+    const lowered = lower(text, options.locale);
     return lowered
         .normalize('NFD')
         .replaceAll(MARKS, '')
